@@ -426,7 +426,8 @@ private:
 		}
 	}
 
-	void ValidareSerioasaCreate(string commanda) {// string& name, string& type, int& dim, string& value) {
+	
+	void ValidareSerioasaCreate(string commanda){// string& name, string& type, int& dim, string& value) {
 		string newCommand = commanda;
 		string editable;
 		string parametriiTabel;
@@ -439,36 +440,49 @@ private:
 		// next
 		// in order to check everything first we strip the table name until ( by any spaces in order to check it lexically 
 		editable = newCommand.substr(0, newCommand.find_first_of('('));
-		copyEditable = function.stringWithoutSpaces(editable);
-		if (function.checkAsciiValue(copyEditable, 'a', 'z') != 0) {
+		copyEditable = stringWithoutSpaces(editable);
+		//WE check to see if the table exists 
+		if (nrChars(copyEditable, 'I', dim)==2) {
+			int noLettersTableName = 0;
+			noLettersTableName = copyEditable.find_first_of('I');
+			if (copyEditable.compare(copyEditable.find_first_of('I'), 11, "IFNOTEXISTS") == 0 && copyEditable.length() == (noLettersTableName + 11)) {
+				//here we should also check the str.substr(0,noLettersTable) with a table name to see if the table exists or not 
+				copyEditable = copyEditable.erase(copyEditable.find_first_of('I'), 11);
+				cout << endl << "We create new table " << copyEditable;
+			}
+			else
+				throw new InvalidCommandException("wrong if not exists", 0);
+
+		}
+		if (checkAsciiValue(copyEditable, 'a', 'z') != 0) {
 			throw new InvalidCommandException("Wrong table name", 0);
 		}
 		else {
 			int counter;
 			newCommand.erase(0, editable.length());
-			if ((function.nrChars(newCommand, '(', counter) != function.nrChars(newCommand, ')', counter)) || ((function.nrChars(newCommand, '(', counter) + (function.nrChars(newCommand, ')', counter))) % 2 != 0)) {
+			if ((nrChars(newCommand, '(', counter) != nrChars(newCommand, ')', counter)) || ((nrChars(newCommand, '(', counter) + (nrChars(newCommand, ')', counter))) % 2 != 0)) {
 				throw new InvalidCommandException("Wrong number of parantesis!", 0);
 			}
-			//after it was checked, if we have only one column we call the function once 
-			else {
-				if (function.nrChars(newCommand, '(', counter) == 1) {
-					createParamVandPars(newCommand, name, type, dim, value);
-					cout << "DONE!";
-				}
-				else   // else we will strip the columns by the commas and spaces dividing them and then call the functions one by one while also deleting from the command string
-				{
-					newCommand = newCommand.substr(newCommand.find_first_of('(') + 1, newCommand.find_last_of(')') - 1);
-					newCommand = function.stringWithoutCommasOrSpaces(newCommand);
-					while (newCommand.length()) {
+			//check for the if not exists
+			if (newCommand.find_first_of('(') > 0) {
 
-						parametriiTabel = newCommand.substr(0, newCommand.find_first_of(')') + 1);
-						createParamVandPars(parametriiTabel, name, type, dim, value);
-						newCommand.erase(0, parametriiTabel.length());
-					}
-					cout << endl << "DONE!";
-				}
 			}
-
+			//after it was checked, if we have only one column we call the function once 
+			if (nrChars(newCommand, '(', counter) == 1) {
+				createParamVandPars(newCommand, name, type, dim, value);
+				cout << "DONE!";
+			}
+			else   // else we will strip the columns by the commas and spaces dividing them and then call the functions one by one while also deleting from the command string
+			{
+				newCommand = newCommand.substr(newCommand.find_first_of('(') + 1, newCommand.find_last_of(')') - 1);
+				newCommand = stringWithoutCommasOrSpaces(newCommand);
+				while (newCommand.length()) {
+					parametriiTabel = newCommand.substr(0, newCommand.find_first_of(')') + 1);
+					createParamVandPars(parametriiTabel, name, type, dim, value);
+					newCommand.erase(0, parametriiTabel.length());
+				}
+				cout << endl << "DONE!";
+			}
 		}
 	}
 };
